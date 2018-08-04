@@ -56,7 +56,7 @@ class PostsController extends Controller
         $this->validate($request, [
             'title' => 'required',
             'body' => 'required',
-            'tag' => 'required',
+            'tags' => 'required',
             'post_image' => 'image|nullable|max:1999',
         ]);
 
@@ -69,7 +69,21 @@ class PostsController extends Controller
         $post->post_image = $filenameToStore;
         $post->user_id = auth()->user()->id;
         $post->save();
-        $post->tags()->attach($request['tag']);
+
+        $existingTags = Tag::all()->whereIn('name', $request['tags']);
+
+        foreach($request['tags'] as $tag){
+            if($oldTag = $existingTags->firstWhere('name', $tag)){
+                $post->tags()->attach($oldTag);
+            } else {
+                $newTag = new Tag;
+                $newTag->name = $tag;
+                if($newTag->save()){
+                    $post->tags()->attach($newTag);
+                }
+            }
+        }
+        
         return redirect('/posts')->with('success', 'Post Created');
     }
 
@@ -132,12 +146,25 @@ class PostsController extends Controller
         if($post = Post::find($id)){
             $post->title = $request['title'];
             $post->body = $request['body'];
-            $post->tags()->detach();
+
+            $existingTags = Tag::all()->whereIn('name', $request['tags']);
+
             foreach($request['tags'] as $tag){
-                if(!$post->tags->contains($tag)){
-                    $post->tags()->attach($tag);
+                if($oldTag = $existingTags->firstWhere('name', $tag)){
+                    foreach($post->tags as $postTag){
+                        if(! $postTag->name === $oldTag){
+                            $post->tags()->attach($oldTag);
+                        }
+                    }
+                } else {
+                    $newTag = new Tag;
+                    $newTag->name = $tag;
+                    if($newTag->save()){
+                        $post->tags()->attach($newTag);
+                    }
                 }
             }
+
             if($request->hasFile('post_image')){
                 $filenameToStore = $this->uploadFile($request);
                 // Deleting previous image
@@ -146,9 +173,13 @@ class PostsController extends Controller
                 // Updating filename in DB
                 $post->post_image = $filenameToStore;
             }
+
             $post->save();
+
             return redirect('/posts')->with('success', 'Post Updated');
+
         } else {
+            
             return redirect('/posts')->with('error', 'Post not found.');
         }
     }

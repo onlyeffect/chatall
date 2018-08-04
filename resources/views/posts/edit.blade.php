@@ -15,11 +15,11 @@
             Update the tags:
             <select id="tagList" name="tags[]" multiple="multiple" size="{{count($post->tags) + count($freeTags)}}" class="form-control">
                 @foreach($post->tags as $tag)
-                    <option value="{{ $tag->id }}" selected>{{ $tag->name }}</option>
+                    <option value="{{ $tag->name }}" selected>{{ $tag->name }}</option>
                 @endforeach
 
                 @foreach($freeTags as $freeTag)
-                    <option value="{{ $freeTag->id }}">{{ $freeTag->name }}</option>
+                    <option value="{{ $freeTag->name }}">{{ $freeTag->name }}</option>
                 @endforeach
             </select>
         </div>
@@ -37,7 +37,9 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#tagList').select2();
+            $('#tagList').select2({
+                tags: true,
+            });
         });
     </script>
 @endsection

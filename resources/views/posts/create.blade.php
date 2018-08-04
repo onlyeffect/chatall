@@ -17,9 +17,9 @@
         </div>
 
         <div class="form-group">
-            <select name="tag" id="tagList" multiple="multiple" class="form-control" required>
+            <select name="tags[]" id="tagList" multiple="multiple" class="form-control" required>
                 @foreach($tags as $tag)
-                    <option value="{{$tag->id}}">{{$tag->name}}</option>
+                    <option value="{{$tag->name}}">{{$tag->name}}</option>
                 @endforeach
             </select>
         </div>
@@ -38,9 +38,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#tagList').select2(
-                {placeholder: 'Select a tag'}
-            );
+            $('#tagList').select2({
+                placeholder: 'Select a tag',
+                tags: true,
+            });
         });
     </script>
 @endsection
