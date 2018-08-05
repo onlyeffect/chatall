@@ -26,9 +26,17 @@ class PostsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $posts = Post::with('tags')->orderBy('created_at', 'desc')->paginate(3);
+        if($request['tag']){
+            $posts = Post::whereHas('tags', function ($query) use ($request){
+                $query->where('name', $request['tag']);
+            })
+                ->orderBy('created_at', 'desc')
+                ->paginate(3);
+        } else {
+            $posts = Post::with('tags')->orderBy('created_at', 'desc')->paginate(3);
+        }
 
         return view('posts.index')->with('posts', $posts);
     }
