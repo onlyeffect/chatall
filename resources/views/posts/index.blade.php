@@ -14,7 +14,7 @@
                         <h4>Comments: <a href="{{ route('posts.show', $post->id) }}#comments">{{count($post->comments)}}</a></h4>
                         <h4>Tags: 
                             @foreach($post->tags as $tag)
-                                <a href="?tag={{ $tag->name }}">{{$tag->name}}</a>
+                                <a href="{{ route('posts.index') }}?tag={{ $tag->name }}">#{{$tag->name}}</a>
                             @endforeach
                         </h4>
                     </div>

@@ -18,7 +18,10 @@
     @include('inc.navbar')
     <div class="container" style="word-wrap:break-word;">
         <div class="row">@include('inc.messages')</div>
-        <div class="row">@yield('content')</div>
+        <div class="row">
+            <div class="col-sm-10">@yield('content')</div>
+            <div class="col-sm-2">@include('inc.tags')</div>
+        </div>
     </div>
 
     <!-- Scripts -->

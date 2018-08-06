@@ -6,7 +6,7 @@
         <h1>{{$post->title}}</h1>
         <h4>Tags: 
             @foreach($post->tags as $tag)
-                <a href="{{ route('posts.index') }}?tag={{ $tag->name }}">{{$tag->name}}</a>
+                <a href="{{ route('posts.index') }}?tag={{ $tag->name }}">#{{$tag->name}}</a>
             @endforeach
         </h4>
         <img style="width:60%;" src="/storage/post_images/{{$post->post_image}}" alt="Post Image">

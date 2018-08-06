@@ -154,16 +154,13 @@ class PostsController extends Controller
         if($post = Post::find($id)){
             $post->title = $request['title'];
             $post->body = $request['body'];
-
+            $post->tags()->detach();
+            
             $existingTags = Tag::all()->whereIn('name', $request['tags']);
-
+            
             foreach($request['tags'] as $tag){
                 if($oldTag = $existingTags->firstWhere('name', $tag)){
-                    foreach($post->tags as $postTag){
-                        if(! $postTag->name === $oldTag){
-                            $post->tags()->attach($oldTag);
-                        }
-                    }
+                    $post->tags()->attach($oldTag);
                 } else {
                     $newTag = new Tag;
                     $newTag->name = $tag;
