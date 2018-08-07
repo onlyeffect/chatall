@@ -17,7 +17,7 @@ class AppServiceProvider extends ServiceProvider
         Schema::defaultStringLength(191);
         
         view()->composer('inc.tags', function ($view) {
-            $view->with('tags', \App\Tag::with('posts')->get());
+            $view->with('tags', \App\Tag::withCount('posts')->orderBy('posts_count', 'desc')->get());
         });
     }
 
