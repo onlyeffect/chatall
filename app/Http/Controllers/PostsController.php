@@ -28,9 +28,10 @@ class PostsController extends Controller
      */
     public function index(Request $request)
     {
-        if($request['tag']){
-            $posts = Post::whereHas('tags', function ($query) use ($request){
-                $query->where('name', $request['tag']);
+        $tagName = $request['tag'];
+        if (isset($tagName)) {
+            $posts = Post::whereHas('tags', function ($query) use ($tagName){
+                $query->where('name', $tagName);
             })
                 ->orderBy('created_at', 'desc')
                 ->paginate(3);
@@ -38,7 +39,7 @@ class PostsController extends Controller
             $posts = Post::with('tags')->orderBy('created_at', 'desc')->paginate(3);
         }
 
-        return view('posts.index')->with('posts', $posts);
+        return view('posts.index', compact('posts', 'tagName'));
     }
 
     /**

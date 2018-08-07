@@ -21,7 +21,7 @@
                 </div>
             </div>
         @endforeach
-        {{$posts->links()}}
+        {{$posts->appends(['tag' => $tagName])->links()}}
     @else
         <div class="well">
             <p>No posts found.</p>
