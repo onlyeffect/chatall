@@ -32,7 +32,16 @@ class User extends Authenticatable
         return $this->hasMany('App\Post');
     }
 
-    public function comments(){
+    public function comments()
+    {
         return $this->hasMany('App\Comment');
+    }
+
+    public function getTags()
+    {
+        $userTags = Tag::whereHas('posts.user', function ($query) {
+            $query->where('name', $this->name);
+        })->get();
+        return $userTags;
     }
 }
