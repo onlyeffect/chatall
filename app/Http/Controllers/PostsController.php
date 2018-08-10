@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Storage;
 // Используем модель
 use App\Post;
 use App\Tag;
+use Purifier;
 
 class PostsController extends Controller
 {
@@ -74,7 +75,7 @@ class PostsController extends Controller
 
         $post = new Post;
         $post->title = $request['title'];
-        $post->body = $request['body'];
+        $post->body = Purifier::clean($request['body']);
         $post->post_image = $filenameToStore;
         $post->user_id = auth()->user()->id;
         $post->save();
@@ -154,7 +155,8 @@ class PostsController extends Controller
         
         if($post = Post::find($id)){
             $post->title = $request['title'];
-            $post->body = $request['body'];
+            //dd(Purifier::clean($request['body']));
+            $post->body = Purifier::clean($request['body']);
             $post->tags()->detach();
             
             $existingTags = Tag::all()->whereIn('name', $request['tags']);

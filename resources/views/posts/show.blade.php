@@ -10,7 +10,7 @@
             @endforeach
         </h4>
         <img style="width:60%;" src="/storage/post_images/{{$post->post_image}}" alt="Post Image">
-        <h4>{{$post->body}}</h4>
+        <h4>{!! $post->body !!}</h4>
         <hr>
         <small>Created {{\Carbon\Carbon::parse($post->created_at)->diffForHumans()}} by {{$post->user['name']}}</small>
     </div>

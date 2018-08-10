@@ -1,9 +1,12 @@
 @extends('layouts.app')
 
+@section('styles')
+    <link href="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+@endsection
+
 @section('content')
     <h1>Create Post</h1>
     <form action="{{route('posts.store')}}" method="POST" enctype="multipart/form-data">
-
         {{ csrf_field() }}
 
         <div class="form-group">
@@ -13,7 +16,7 @@
 
         <div class="form-group">
             <label for="body">Post body</label>
-            <textarea name="body" id="body" rows="8" class="form-control" placeholder="Post body" required></textarea>
+            <textarea name="body" rows="8"></textarea>
         </div>
 
         <div class="form-group">
@@ -34,13 +37,21 @@
 @endsection
 
 @section('scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-json/2.6.0/jquery.json.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+    <script src="{{ asset('tinymce/tinymce.min.js') }}"></script>
     <script>
         $(document).ready(function() {
+            tinymce.init({
+                selector:'textarea',
+                plugins: "paste",
+                paste_as_text: true,
+                menubar: false,
+                toolbar: 'undo, redo | bold, italic, underline, strikethrough | subscript, superscript | bullist numlist',
+            });
             $('#tagList').select2({
                 placeholder: 'Select a tag',
                 tags: true,
+                width: '100%',
             });
         });
     </script>

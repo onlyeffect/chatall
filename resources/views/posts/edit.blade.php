@@ -1,16 +1,25 @@
 @extends('layouts.app')
 
+@section('styles')
+    <link href="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+@endsection
+
 @section('content')
     <h1>Update Post</h1>
     <form action="{{route('posts.update', $post->id)}}" method="POST" enctype="multipart/form-data">
+        {{ method_field('PUT') }}
+        {{ csrf_field() }}
+
         <div class="form-group">
             <label for="title">Title</label>
             <input type="text" name="title" id="title" class="form-control" placeholder="Title" value="{{$post->title}}">
         </div>
+
         <div class="form-group">
             <label for="body">Post body</label>
-            <textarea name="body" id="body" rows="8" class="form-control" placeholder="Post body">{{$post->body}}</textarea>
+            <textarea name="body" rows="8">{!! $post->body !!}</textarea>
         </div>
+
         <div class="form-group">
             Update the tags:
             <select id="tagList" name="tags[]" multiple="multiple" size="{{count($post->tags) + count($freeTags)}}" class="form-control">
@@ -23,22 +32,31 @@
                 @endforeach
             </select>
         </div>
+
         <div class="form-group">
                 <input type="file" name="post_image" accept="image/*">
-            </div>
+        </div>
+
         <input type="submit" class="btn btn-primary" value="Update">
-        {{ method_field('PUT') }}
-        {{ csrf_field() }}
     </form>
 @endsection
 
 @section('scripts')
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-json/2.6.0/jquery.json.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+    <script src="{{ asset('tinymce/tinymce.min.js') }}"></script>
     <script>
         $(document).ready(function() {
+            tinymce.init({
+                selector:'textarea',
+                plugins: "paste",
+                paste_as_text: true,
+                menubar: false,
+                toolbar: 'undo, redo | bold, italic, underline, strikethrough | subscript, superscript | bullist numlist',
+            });
             $('#tagList').select2({
+                placeholder: 'Select a tag',
                 tags: true,
+                width: '100%',
             });
         });
     </script>
