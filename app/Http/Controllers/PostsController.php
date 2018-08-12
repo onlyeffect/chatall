@@ -83,15 +83,7 @@ class PostsController extends Controller
         $existingTags = Tag::all()->whereIn('name', $request['tags']);
 
         foreach($request['tags'] as $tag){
-            if($oldTag = $existingTags->firstWhere('name', $tag)){
-                $post->tags()->attach($oldTag);
-            } else {
-                $newTag = new Tag;
-                $newTag->name = $tag;
-                if($newTag->save()){
-                    $post->tags()->attach($newTag);
-                }
-            }
+            $post->attachOldTagOrCreateNewAndAttach($existingTags, $tag);
         }
         
         return redirect('/posts')->with('success', 'Post Created');
@@ -132,7 +124,7 @@ class PostsController extends Controller
                 $freeTags = Tag::all()->whereNotIn('name', $postTagNames);
 
             return view('posts.edit', compact('post', 'freeTags'));
-        }else {
+        } else {
             return redirect('/posts')->with('error', 'Post not found.');
         }
     }
@@ -162,22 +154,15 @@ class PostsController extends Controller
             $existingTags = Tag::all()->whereIn('name', $request['tags']);
             
             foreach($request['tags'] as $tag){
-                if($oldTag = $existingTags->firstWhere('name', $tag)){
-                    $post->tags()->attach($oldTag);
-                } else {
-                    $newTag = new Tag;
-                    $newTag->name = $tag;
-                    if($newTag->save()){
-                        $post->tags()->attach($newTag);
-                    }
-                }
+                $post->attachOldTagOrCreateNewAndAttach($existingTags, $tag);
             }
 
             if($request->hasFile('post_image')){
                 $filenameToStore = $this->uploadFile($request);
                 // Deleting previous image
-                if($post->post_image !== 'no_image.jpg')
+                if($post->post_image !== 'no_image.jpg') {
                     Storage::delete('public/post_images/'.$post->post_image);
+                }
                 // Updating filename in DB
                 $post->post_image = $filenameToStore;
             }
@@ -185,9 +170,7 @@ class PostsController extends Controller
             $post->save();
 
             return redirect('/posts')->with('success', 'Post Updated');
-
         } else {
-            
             return redirect('/posts')->with('error', 'Post not found.');
         }
     }

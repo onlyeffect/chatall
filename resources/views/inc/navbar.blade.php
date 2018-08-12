@@ -12,6 +12,7 @@
     <div id="navbar" class="collapse navbar-collapse">
         <ul class="nav navbar-nav">
             <li><a href="{{ route('users') }}">Users</a></li>
+            <li><a href="{{ route('chat') }}">Live Chat</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
                 <!-- Authentication Links -->

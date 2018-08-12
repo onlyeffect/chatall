@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+<div class="col-sm-10">
     @if(count($posts) > 0)
         @foreach($posts as $post)
             <div class="well"> 
@@ -27,4 +28,8 @@
             <p>No posts found.</p>
         </div>
     @endif
+</div>
+
+<div class="col-sm-2">@include('inc.tags')</div>
+
 @endsection

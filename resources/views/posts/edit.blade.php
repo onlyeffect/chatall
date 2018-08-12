@@ -5,6 +5,7 @@
 @endsection
 
 @section('content')
+<div class="col-sm-10">
     <h1>Update Post</h1>
     <form action="{{route('posts.update', $post->id)}}" method="POST" enctype="multipart/form-data">
         {{ method_field('PUT') }}
@@ -39,6 +40,10 @@
 
         <input type="submit" class="btn btn-primary" value="Update">
     </form>
+</div>
+
+<div class="col-sm-2">@include('inc.tags')</div>
+
 @endsection
 
 @section('scripts')

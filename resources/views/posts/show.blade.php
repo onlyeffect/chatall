@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+<div class="col-sm-10">
     <div class="form-group">
         <p><a href="/" class="btn btn-default">Go back</a></p>
         <h1>{{$post->title}}</h1>
@@ -47,4 +48,8 @@
             <p>No comments yet. You can be the first!</p>
         @endif
     </div>
+</div>
+
+<div class="col-sm-2">@include('inc.tags')</div>
+
 @endsection
