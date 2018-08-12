@@ -3,7 +3,10 @@
         <div class="panel panel-default">
             <div class="panel-heading">Users</div>
             <div class="panel-body">
-                <div class="users" v-for="user in users" :key="user.id">
+                <div v-if="disableTrigger === true">
+                    Please <a href="/login">login</a> to see users.
+                </div>
+                <div v-else v-for="user in users" :key="user.id">
                     {{ user.name }}
                 </div>
             </div>
@@ -17,10 +20,13 @@
     export default {
         data() {
             return {
-                users: []
+                users: [],
+                disableTrigger: false
             }
         },
         mounted() {
+            setTimeout(this.checkUser, 0);
+
             Event.$on('users.here', (users) => {
                 this.users = users;
             })
@@ -32,13 +38,13 @@
                     return u.id != user.id
                 });
             });
-        }
+        },
+        methods: {
+            checkUser() {
+                if(! Laravel.user.authenticated) {
+                    this.disableTrigger = true;
+                }
+            }
+        },
     }
 </script>
-
-<style>
-    .users {
-        background-color: #fff;
-        border-radius: 3px;
-    }
-</style>

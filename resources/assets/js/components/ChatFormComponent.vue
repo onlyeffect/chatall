@@ -6,7 +6,10 @@
             rows="5"
             class="form-input"
             @keydown="typing"
-            v-model="body">
+            v-model="body"
+            :placeholder=placeholder
+            :disabled="disableTrigger === true"
+        >
         </textarea>
         <span class="notice">
             Hit Enter to send a message
@@ -21,10 +24,21 @@
     export default {
         data() {
             return {
-                body: null
+                body: null,
+                placeholder: null,
+                disableTrigger: false
             }
         },
+        mounted(){
+            setTimeout(this.checkUser, 0);
+        },
         methods: {
+            checkUser() {
+                if(! Laravel.user.authenticated) {
+                    this.placeholder = "Please login to use chat.";
+                    this.disableTrigger = true;
+                }
+            },
             typing(e) {
                 if(e.keyCode === 13 && !e.shiftKey) {
                     e.preventDefault();
@@ -69,6 +83,7 @@
         border: 1px solid #d3e0e9;
         padding: 5px 10px;
         outline: none;
+        resize: none;
     }
     .notice {
         color: #aaa

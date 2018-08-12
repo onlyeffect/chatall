@@ -22,6 +22,7 @@
     .message {
         margin-bottom: 10px;
         padding: 10px;
+        border: rgb(226, 226, 226) 0.5px solid;
     }
     .self {
         background-color: #f0f0f0;
