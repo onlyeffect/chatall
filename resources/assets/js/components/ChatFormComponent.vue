@@ -1,5 +1,9 @@
 <template>
     <form class="form">
+        <div v-if="userIsTyping" style="padding-bottom:6px">
+            <span style="font-weight: 800;">{{ userIsTyping.name }}</span> is typing...
+        </div>
+        <div v-else style="padding: 13px;"></div>
         <textarea
             id="body"
             cols="28"
@@ -26,11 +30,29 @@
             return {
                 body: null,
                 placeholder: null,
-                disableTrigger: false
+                disableTrigger: false,
+                userIsTyping: false,
+                typingTimer: false,
+            }
+        },
+        computed: {
+            channel() {
+                return window.Echo.private('chat');
             }
         },
         mounted(){
             setTimeout(this.checkUser, 0);
+
+            this.channel.listenForWhisper('user_typing', (e) => {
+                this.userIsTyping = e;
+
+                if(this.typingTimer)
+                    clearTimeout(this.typingTimer);
+
+                this.typingTimer = setTimeout(() => {
+                    this.userIsTyping = false;
+                }, 800);
+            });
         },
         methods: {
             checkUser() {
@@ -42,10 +64,12 @@
             typing(e) {
                 if(e.keyCode === 13 && !e.shiftKey) {
                     e.preventDefault();
-                    if(Laravel.user.authenticated) {
-                        this.sendMessage();
-                    }
-                }        
+                    this.sendMessage();
+                }else {
+                    this.channel.whisper('user_typing', {
+                        name: Laravel.user.name
+                    });
+                }
             },
             sendMessage() {
                 if(!this.body || this.body.trim() === '') {
@@ -88,5 +112,4 @@
     .notice {
         color: #aaa
     }
-    
 </style>

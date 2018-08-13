@@ -49190,7 +49190,7 @@ exports = module.exports = __webpack_require__(5)(false);
 
 
 // module
-exports.push([module.i, "\n.form {\n    padding: 8px;\n}\n.form-input {\n    width: 100%;\n    border: 1px solid #d3e0e9;\n    padding: 5px 10px;\n    outline: none;\n    resize: none;\n}\n.notice {\n    color: #aaa\n}\n\n", ""]);
+exports.push([module.i, "\n.form {\n    padding: 8px;\n}\n.form-input {\n    width: 100%;\n    border: 1px solid #d3e0e9;\n    padding: 5px 10px;\n    outline: none;\n    resize: none;\n}\n.notice {\n    color: #aaa\n}\n", ""]);
 
 // exports
 
@@ -49221,6 +49221,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
 
 
 
@@ -49230,11 +49234,31 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         return {
             body: null,
             placeholder: null,
-            disableTrigger: false
+            disableTrigger: false,
+            userIsTyping: false,
+            typingTimer: false
         };
     },
+
+    computed: {
+        channel: function channel() {
+            return window.Echo.private('chat');
+        }
+    },
     mounted: function mounted() {
+        var _this = this;
+
         setTimeout(this.checkUser, 0);
+
+        this.channel.listenForWhisper('user_typing', function (e) {
+            _this.userIsTyping = e;
+
+            if (_this.typingTimer) clearTimeout(_this.typingTimer);
+
+            _this.typingTimer = setTimeout(function () {
+                _this.userIsTyping = false;
+            }, 800);
+        });
     },
 
     methods: {
@@ -49247,9 +49271,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         typing: function typing(e) {
             if (e.keyCode === 13 && !e.shiftKey) {
                 e.preventDefault();
-                if (Laravel.user.authenticated) {
-                    this.sendMessage();
-                }
+                this.sendMessage();
+            } else {
+                this.channel.whisper('user_typing', {
+                    name: Laravel.user.name
+                });
             }
         },
         sendMessage: function sendMessage() {
@@ -49287,6 +49313,15 @@ var render = function() {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c("form", { staticClass: "form" }, [
+    _vm.userIsTyping
+      ? _c("div", { staticStyle: { "padding-bottom": "6px" } }, [
+          _c("span", { staticStyle: { "font-weight": "800" } }, [
+            _vm._v(_vm._s(_vm.userIsTyping.name))
+          ]),
+          _vm._v(" is typing...\n    ")
+        ])
+      : _c("div", { staticStyle: { padding: "13px" } }),
+    _vm._v(" "),
     _c("textarea", {
       directives: [
         {
