@@ -10,7 +10,7 @@ class MessagesController extends Controller
 {
     public function index()
     {
-        $messages = Message::with('user')->get();
+        $messages = Message::with('user')->orderBy('created_at', 'asc')->paginate(10);
 
         return response()->json($messages);
     }

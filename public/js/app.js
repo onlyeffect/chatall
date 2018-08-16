@@ -48991,7 +48991,7 @@ exports = module.exports = __webpack_require__(5)(false);
 
 
 // module
-exports.push([module.i, "\n.message-area {\n    height: 400px;\n    max-height: 400px;\n    overflow-y: scroll;\n    padding: 15px;\n    border-bottom: 1px solid #eee;\n}\n", ""]);
+exports.push([module.i, "\n.message-area {\n    height: 400px;\n    max-height: 400px;\n    overflow-y: scroll;\n    padding: 15px;\n    border-bottom: 1px solid #eee;\n}\n.img-responsive {\n    margin-top:-20px;\n    margin-bottom:5px;\n    height: 55px;\n}\n", ""]);
 
 // exports
 
@@ -49046,31 +49046,64 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
 
 
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     data: function data() {
         return {
-            messages: []
+            messages: [],
+            lastPage: null
         };
     },
 
     methods: {
         chatScrollBottom: function chatScrollBottom() {
             this.$refs.message.scrollTop = this.$refs.message.scrollHeight;
+        },
+        getLastPage: function getLastPage() {
+            var _this = this;
+
+            axios.get('/messages').then(function (response) {
+                _this.lastPage = response.data.last_page;
+                _this.loadMessages(_this.lastPage, true);
+            });
+        },
+        loadMessages: function loadMessages(page) {
+            var _this2 = this;
+
+            var scrollBottom = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+            if (page > 0) {
+                axios.get('/messages?page=' + page).then(function (response) {
+                    _this2.messages = response.data.data.concat(_this2.messages);
+                    _this2.lastPage--;
+                    var messagesOnPage = response.data.to - response.data.from + 1;
+                    if (messagesOnPage < 6) {
+                        _this2.loadMessages(page - 1, true);
+                    }
+                    if (scrollBottom === true) {
+                        setTimeout(_this2.chatScrollBottom, 0);
+                    }
+                });
+            }
+        },
+        scrollLoading: function scrollLoading() {
+            if (this.$refs.message.scrollTop === 0) {
+                this.loadMessages(this.lastPage);
+            }
         }
     },
     mounted: function mounted() {
-        var _this = this;
+        var _this3 = this;
 
-        axios.get('/messages').then(function (response) {
-            _this.messages = response.data;
-            setTimeout(_this.chatScrollBottom, 0);
-        });
+        this.getLastPage();
         __WEBPACK_IMPORTED_MODULE_0__event_js__["a" /* default */].$on('added_message', function (message) {
-            _this.messages.push(message);
-            setTimeout(_this.chatScrollBottom, 0);
+            _this3.messages.push(message);
+            if (message.selfMessage === true) {
+                setTimeout(_this3.chatScrollBottom, 0);
+            }
         });
     }
 });
@@ -49085,13 +49118,27 @@ var render = function() {
   var _c = _vm._self._c || _h
   return _c(
     "div",
-    { ref: "message", staticClass: "message-area" },
-    _vm._l(_vm.messages, function(message) {
-      return _c("message-component", {
-        key: message.id,
-        attrs: { message: message }
+    {
+      ref: "message",
+      staticClass: "message-area",
+      on: { scroll: _vm.scrollLoading }
+    },
+    [
+      _vm.lastPage > 0
+        ? _c("img", {
+            staticClass: "img-responsive center-block",
+            attrs: { src: "/storage/loading.gif", alt: "loading" }
+          })
+        : _vm._e(),
+      _vm._v(" "),
+      _vm._l(_vm.messages, function(message) {
+        return _c("message-component", {
+          key: message.id,
+          attrs: { message: message }
+        })
       })
-    })
+    ],
+    2
   )
 }
 var staticRenderFns = []
