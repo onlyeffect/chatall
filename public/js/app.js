@@ -49062,6 +49062,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         chatScrollBottom: function chatScrollBottom() {
             this.$refs.message.scrollTop = this.$refs.message.scrollHeight;
         },
+        chatScrollToPreviousMessages: function chatScrollToPreviousMessages() {
+            this.$refs.message.scrollTop = 400;
+        },
         getLastPage: function getLastPage() {
             var _this = this;
 
@@ -49073,7 +49076,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         loadMessages: function loadMessages(page) {
             var _this2 = this;
 
-            var scrollBottom = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+            var doScrollBottom = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
             if (page > 0) {
                 axios.get('/messages?page=' + page).then(function (response) {
@@ -49083,8 +49086,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     if (messagesOnPage < 6) {
                         _this2.loadMessages(page - 1, true);
                     }
-                    if (scrollBottom === true) {
+                    if (doScrollBottom === true) {
                         setTimeout(_this2.chatScrollBottom, 0);
+                    } else {
+                        setTimeout(_this2.chatScrollToPreviousMessages, 0);
                     }
                 });
             }

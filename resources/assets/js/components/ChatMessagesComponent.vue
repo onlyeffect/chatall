@@ -23,13 +23,16 @@
             chatScrollBottom: function(){
                 this.$refs.message.scrollTop = this.$refs.message.scrollHeight;
             },
+            chatScrollToPreviousMessages: function(){
+                this.$refs.message.scrollTop = 400;
+            },
             getLastPage: function(){
                 axios.get(`/messages`).then((response) => {
                     this.lastPage = response.data.last_page;
                     this.loadMessages(this.lastPage, true);
                 });
             },
-            loadMessages: function(page, scrollBottom = false){
+            loadMessages: function(page, doScrollBottom = false){
                 if(page > 0){
                     axios.get(`/messages?page=${page}`).then((response) => {
                         this.messages = response.data.data.concat(this.messages);
@@ -38,8 +41,10 @@
                         if(messagesOnPage < 6){
                             this.loadMessages(page - 1, true);
                         }
-                        if(scrollBottom === true){
+                        if(doScrollBottom === true){
                             setTimeout(this.chatScrollBottom, 0);
+                        } else {
+                            setTimeout(this.chatScrollToPreviousMessages, 0);
                         }
                     });
                 }
