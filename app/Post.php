@@ -29,7 +29,7 @@ class Post extends Model
         ]);
     }
 
-    public function attachOldTagOrCreateNewAndAttach($existingTags, $tag) 
+    public function attachOrCreateAndAttachtTag($existingTags, $tag) 
     {
         if($oldTag = $existingTags->firstWhere('name', $tag)){
             $this->tags()->attach($oldTag);
@@ -40,5 +40,12 @@ class Post extends Model
                 $this->tags()->attach($newTag);
             }
         }
+    }
+
+    public static function allWhereHasTag($tagName)
+    {
+        return self::whereHas('tags', function ($query) use ($tagName){
+            $query->where('name', $tagName);
+        });
     }
 }

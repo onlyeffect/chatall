@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-// Используем модель
 use App\Post;
 use App\Tag;
 use Purifier;
@@ -29,13 +28,8 @@ class PostsController extends Controller
      */
     public function index(Request $request)
     {
-        $tagName = $request['tag'];
-        if (isset($tagName)) {
-            $posts = Post::whereHas('tags', function ($query) use ($tagName){
-                $query->where('name', $tagName);
-            })
-                ->orderBy('created_at', 'desc')
-                ->paginate(3);
+        if ($tagName = $request['tag']) {
+            $posts = Post::allWhereHasTag($tagName)->orderBy('created_at', 'desc')->paginate(3);
         } else {
             $posts = Post::with('tags')->orderBy('created_at', 'desc')->paginate(3);
         }
@@ -71,7 +65,7 @@ class PostsController extends Controller
         ]);
 
         // Handle image uploading
-        $filenameToStore = ($request->hasFile('post_image')) ? $this->uploadFile($request) : 'no_image.jpg';
+        $filenameToStore = ($request->hasFile('post_image')) ? $this->saveImage($request->file('post_image')) : 'no_image.jpg';
 
         $post = new Post;
         $post->title = $request['title'];
@@ -80,12 +74,8 @@ class PostsController extends Controller
         $post->user_id = auth()->user()->id;
         $post->save();
 
-        $existingTags = Tag::all()->whereIn('name', $request['tags']);
+        $this->attachAllTags($post, $request['tags']);
 
-        foreach($request['tags'] as $tag){
-            $post->attachOldTagOrCreateNewAndAttach($existingTags, $tag);
-        }
-        
         return redirect('/posts')->with('success', 'Post Created');
     }
 
@@ -98,8 +88,7 @@ class PostsController extends Controller
     public function show($id)
     {
         if($post = Post::find($id)){
-            $comments = $post->comments;
-            $comments = $comments->sortByDesc('created_at');
+            $comments = $post->comments->sortByDesc('created_at');
             return view('posts.show', compact('post', 'comments'));
         }else{
             return redirect('/posts')->with('error', 'Post not found.');
@@ -115,14 +104,12 @@ class PostsController extends Controller
     public function edit($id)
     {
         if($post = Post::find($id)){
-
             // Checking for correct user
-            if($post->user_id !== auth()->user()->id)
+            if($post->user_id !== auth()->user()->id){
                 return redirect('/posts')->with('error', 'Unauthorized page!');
-
-                $postTagNames = $post->tags->pluck('name');
-                $freeTags = Tag::all()->whereNotIn('name', $postTagNames);
-
+            }
+            $postTags = $post->tags->pluck('name');
+            $freeTags = Tag::all()->whereNotIn('name', $postTags);
             return view('posts.edit', compact('post', 'freeTags'));
         } else {
             return redirect('/posts')->with('error', 'Post not found.');
@@ -147,28 +134,18 @@ class PostsController extends Controller
         
         if($post = Post::find($id)){
             $post->title = $request['title'];
-            //dd(Purifier::clean($request['body']));
             $post->body = Purifier::clean($request['body']);
-            $post->tags()->detach();
-            
-            $existingTags = Tag::all()->whereIn('name', $request['tags']);
-            
-            foreach($request['tags'] as $tag){
-                $post->attachOldTagOrCreateNewAndAttach($existingTags, $tag);
-            }
-
             if($request->hasFile('post_image')){
-                $filenameToStore = $this->uploadFile($request);
                 // Deleting previous image
                 if($post->post_image !== 'no_image.jpg') {
                     Storage::delete('public/post_images/'.$post->post_image);
                 }
-                // Updating filename in DB
+                $filenameToStore = $this->saveImage($request['post_image']);
                 $post->post_image = $filenameToStore;
             }
-
+            $post->tags()->detach();
+            $this->attachAllTags($post, $request['tags']);
             $post->save();
-
             return redirect('/posts')->with('success', 'Post Updated');
         } else {
             return redirect('/posts')->with('error', 'Post not found.');
@@ -184,38 +161,45 @@ class PostsController extends Controller
     public function destroy($id)
     {
         if($post = Post::find($id)){
-
             // Checking for correct user
-            if($post->user_id !== auth()->user()->id)
+            if($post->user_id !== auth()->user()->id){
                 return redirect('/posts')->with('error', 'Unauthorized page!');
-
-            if($post->post_image !== 'no_image.jpg')
+            }
+            if($post->post_image !== 'no_image.jpg'){
                 Storage::delete('public/post_images/'.$post->post_image);
-
+            }
             $post->delete();
-            
             return redirect('/posts')->with('success', 'Post Deleted');
         } else {
             return redirect('/posts')->with('error', 'Post not found.');
         }
     }
 
-    private function uploadFile($request){
-        // Gettig the full file name
-        $filenameWithExt = $request->file('post_image')->getClientOriginalName();
-        // Getting the file name wothout extension
+    private function saveImage($image){
+        $filenameWithExt = $image->getClientOriginalName();
+        $fileExt = $image->getClientOriginalExtension();
         $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
-        // Getting only the extension
-        $fileExt = $request->file('post_image')->getClientOriginalExtension();
-        // Checking if the extension equals defauit image extensions
-        if($fileExt !== 'jpg' && $fileExt !== 'jpeg' && $fileExt !== 'gif' && $fileExt !== 'bmp' && $fileExt !== 'png' && $fileExt !== 'svg')
+        if(
+            $fileExt !== 'jpg' && 
+            $fileExt !== 'jpeg' && 
+            $fileExt !== 'gif' && 
+            $fileExt !== 'bmp' && 
+            $fileExt !== 'png' && 
+            $fileExt !== 'svg'
+        ){
             return redirect('/posts/create')->with('error', 'Invalid file extension');
-        // Making unique filename
+        }
         $filenameToStore = $filename . '_' . time() . '.' . $fileExt;
-        // Storing the file
-        $path = $request->file('post_image')->storeAs(
-            'public/post_images', $filenameToStore
-        );
-        return $filenameToStore;
+        if($image->storeAs('public/post_images', $filenameToStore)){
+            return $filenameToStore;
+        }
+    }
+
+    private function attachAllTags(Post $post, $tags)
+    {
+        $existingTags = Tag::all()->whereIn('name', $tags);
+        foreach($tags as $tag){
+            $post->attachOrCreateAndAttachtTag($existingTags, $tag);
+        }
     }
 }
