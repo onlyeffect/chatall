@@ -42,6 +42,12 @@ class Post extends Model
         }
     }
 
+    public function incrementViews()
+    {
+        $this->views = $this->views + 1;
+        $this->save();
+    }
+
     public static function allWhereHasTag($tagName)
     {
         return self::whereHas('tags', function ($query) use ($tagName){

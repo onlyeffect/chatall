@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+<div class="col-sm-10">
     <h1>Most Active Users</h1><br>
     <table class="table table-striped table-bordered">
     <thead>
@@ -22,4 +23,8 @@
     @endfor
     </tbody>
     </table>
+</div>
+    
+<div class="col-sm-2">@include('inc.popular_posts')</div>
+<div class="col-sm-2">@include('inc.tags')</div>
 @endsection

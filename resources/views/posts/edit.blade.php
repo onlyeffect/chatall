@@ -42,6 +42,7 @@
     </form>
 </div>
 
+<div class="col-sm-2">@include('inc.popular_posts')</div>
 <div class="col-sm-2">@include('inc.tags')</div>
 
 @endsection

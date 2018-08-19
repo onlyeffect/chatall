@@ -88,9 +88,10 @@ class PostsController extends Controller
     public function show($id)
     {
         if($post = Post::find($id)){
+            $post->incrementViews();
             $comments = $post->comments->sortByDesc('created_at');
             return view('posts.show', compact('post', 'comments'));
-        }else{
+        } else {
             return redirect('/posts')->with('error', 'Post not found.');
         }
     }

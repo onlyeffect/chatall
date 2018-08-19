@@ -14,6 +14,7 @@
         <h4>{!! $post->body !!}</h4>
         <hr>
         <small>Created {{\Carbon\Carbon::parse($post->created_at)->diffForHumans()}} by {{$post->user['name']}}</small>
+        <small class="pull-right">Views: {{ $post->views }}</small>
     </div>
     @auth
         @if($post->user_id === auth()->user()->id)
@@ -50,6 +51,7 @@
     </div>
 </div>
 
+<div class="col-sm-2">@include('inc.popular_posts')</div>
 <div class="col-sm-2">@include('inc.tags')</div>
 
 @endsection

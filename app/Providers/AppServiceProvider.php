@@ -19,6 +19,10 @@ class AppServiceProvider extends ServiceProvider
         view()->composer('inc.tags', function ($view) {
             $view->with('tags', \App\Tag::withCount('posts')->orderBy('posts_count', 'desc')->get());
         });
+
+        view()->composer('inc.popular_posts', function ($view) {
+            $view->with('popularPosts', \App\Post::orderBy('views', 'desc')->limit(5)->get());
+        });
     }
 
     /**

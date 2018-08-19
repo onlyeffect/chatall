@@ -13,6 +13,7 @@
                         <h2><a class="text-justify" href="{{ route('posts.show', $post->id) }}">{{$post->title}}</a></h2>
                         <p>Created {{\Carbon\Carbon::parse($post->created_at)->diffForHumans()}} by <strong>{{$post->user['name']}}</strong></p>
                         <h4>Comments: <a href="{{ route('posts.show', $post->id) }}#comments">{{count($post->comments)}}</a></h4>
+                        <h4>Views: {{ $post->views }}</h4>
                         <h4>Tags: 
                             @foreach($post->tags as $tag)
                                 <a href="{{ route('posts.index') }}?tag={{ $tag->name }}">#{{$tag->name}}</a>
@@ -30,6 +31,7 @@
     @endif
 </div>
 
+<div class="col-sm-2">@include('inc.popular_posts')</div>
 <div class="col-sm-2">@include('inc.tags')</div>
 
 @endsection
