@@ -19,6 +19,18 @@
                                 <a href="{{ route('posts.index') }}?tag={{ $tag->name }}">#{{$tag->name}}</a>
                             @endforeach
                         </h4>
+                        @auth
+                            @if(auth()->user()->isAdmin)
+                                <div class="form-group">
+                                    <form action="{{route('posts.destroy', $post->id)}}" method="POST">
+                                        <a href="{{route('posts.edit', $post->id)}}" class="btn btn-primary">Edit</a>
+                                        <input type="submit" class="btn btn-danger" value="Delete">
+                                        {{method_field('DELETE')}}
+                                        {{csrf_field()}}
+                                    </form>
+                                </div>
+                            @endif
+                        @endauth
                     </div>
                 </div>
             </div>

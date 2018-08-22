@@ -17,7 +17,7 @@
         <small class="pull-right">Views: {{ $post->views }}</small>
     </div>
     @auth
-        @if($post->user_id === auth()->user()->id)
+        @if($post->user_id === auth()->user()->id || auth()->user()->isAdmin)
             <div class="form-group">
                 <form action="{{route('posts.destroy', $post->id)}}" method="POST">
                     <a href="{{route('posts.edit', $post->id)}}" class="btn btn-primary">Edit</a>

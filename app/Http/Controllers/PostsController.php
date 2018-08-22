@@ -106,7 +106,7 @@ class PostsController extends Controller
     {
         if($post = Post::find($id)){
             // Checking for correct user
-            if($post->user_id !== auth()->user()->id){
+            if($post->user_id !== auth()->user()->id && !auth()->user()->isAdmin){
                 return redirect('/posts')->with('error', 'Unauthorized page!');
             }
             $postTags = $post->tags->pluck('name');
@@ -163,7 +163,7 @@ class PostsController extends Controller
     {
         if($post = Post::find($id)){
             // Checking for correct user
-            if($post->user_id !== auth()->user()->id){
+            if($post->user_id !== auth()->user()->id && !auth()->user()->isAdmin){
                 return redirect('/posts')->with('error', 'Unauthorized page!');
             }
             if($post->post_image !== 'no_image.jpg'){
