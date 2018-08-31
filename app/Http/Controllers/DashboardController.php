@@ -4,16 +4,20 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\User;
+use Auth;
 
 class DashboardController extends Controller
 {
+    private $user;
+    
     /**
      * Create a new controller instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(User $user)
     {
+        $this->user = $user;
         $this->middleware('auth');
         $this->middleware('preventBackHistory');
     }
@@ -25,8 +29,7 @@ class DashboardController extends Controller
      */
     public function index()
     {   
-        $user_id = auth()->user()->id;
-        $user = User::find($user_id);
-        return view('dashboard')->with('posts', $user->posts);
+        $userPosts = $this->user->find(auth()->user()->id)->posts->sortByDesc('created_at');
+        return view('dashboard', compact('userPosts'));
     }
 }

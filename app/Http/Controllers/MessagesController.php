@@ -8,9 +8,16 @@ use App\Events\MessageCreated;
 
 class MessagesController extends Controller
 {
+    private $message;
+
+    public function __construct(Message $message)
+    {
+        $this->message = $message;
+    }
+
     public function index()
     {
-        $messages = Message::with('user')->orderBy('created_at', 'asc')->paginate(10);
+        $messages = $this->message->with('user')->orderBy('created_at', 'asc')->paginate(10);
 
         return response()->json($messages);
     }
@@ -20,10 +27,8 @@ class MessagesController extends Controller
         $this->validate($request, [
             'body' => 'required'
         ]);
-
-        $message = $request->user()->messages()->create([
-            'body' => $request->body
-        ]);
+        
+        $message = $request->user()->createMessage($request->body);
 
         broadcast(new MessageCreated($message))->toOthers();
    

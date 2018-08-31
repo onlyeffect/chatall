@@ -10,12 +10,12 @@
         <th>Contributed to</th>
     </thead>
     <tbody>
-    @for($i = 0; $i < count($users); $i++)
+    @for($i = 0; $i < count($activeUsers); $i++)
         <tr>
             <td>{{ $i + 1 }}</td>
-            <td>{{ $users[$i]->name }}</td>
+            <td>{{ $activeUsers[$i]->name }}</td>
             <td>
-                @foreach($users[$i]->getTags() as $tag)
+                @foreach($activeUsers[$i]->getTags() as $tag)
                     <a href="{{ route('posts.index') }}?tag={{ $tag->name }}">#{{$tag->name}}</a>
                 @endforeach
             </td>

@@ -45,8 +45,23 @@ class User extends Authenticatable
     public function getTags()
     {
         $userTags = Tag::whereHas('posts.user', function ($query) {
-            $query->where('name', $this->name);
+            $query->where('id', $this->id);
         })->get();
+        
         return $userTags;
+    }
+
+    public function createMessage(string $messageBody)
+    {
+        $message = $this->messages()->create([
+            'body' => $messageBody
+        ]);
+        
+        return $message;
+    }
+
+    public function getActiveUsers()
+    {
+        return self::withCount('posts')->orderBy('posts_count', 'desc')->get();
     }
 }

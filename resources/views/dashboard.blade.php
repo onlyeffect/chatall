@@ -15,11 +15,11 @@
             <a href="{{route('posts.create')}}" class="btn btn-primary">Create Post</a>
 
             <h3>Your Posts</h3>
-            @if(count($posts) > 0)
-                @foreach($posts as $post)
+            @if(count($userPosts) > 0)
+                @foreach($userPosts as $userPost)
                     <hr>
-                    <h4><a href="{{route('posts.show', $post->id)}}">{{$post->title}}</a></h4>
-                    <div>Created {{\Carbon\Carbon::parse($post->created_at)->diffForHumans()}}</div>
+                    <h4><a href="{{route('posts.show', $userPost->id)}}">{{$userPost->title}}</a></h4>
+                    <div>Created {{\Carbon\Carbon::parse($userPost->created_at)->diffForHumans()}}</div>
                 @endforeach
             @else
                 <span>You have no posts</span>

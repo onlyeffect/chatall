@@ -3,20 +3,29 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use App\Post;
 use App\Tag;
+use App\ImageUploader;
 use Purifier;
 
 class PostsController extends Controller
 {
+    private $post;
+
+    private $tag;
+
+    private $imageUploader;
+
     /**
      * Create a new controller instance.
      *
      * @return void
      */
-     public function __construct()
+     public function __construct(Post $post, Tag $tag, ImageUploader $imageUploader)
      {
+         $this->post = $post;
+         $this->tag = $tag;
+         $this->imageUploader = $imageUploader;
         //  $this->middleware('preventBackHistory');
          $this->middleware('auth')->except(['index', 'show']);
      }
@@ -28,10 +37,12 @@ class PostsController extends Controller
      */
     public function index(Request $request)
     {
-        if ($tagName = $request['tag']) {
-            $posts = Post::allWhereHasTag($tagName)->orderBy('created_at', 'desc')->paginate(3);
+        $tagName = $request['tag'];
+
+        if (! empty($tagName)) {
+            $posts = $this->post->allWhereHasTag($tagName)->orderBy('created_at', 'desc')->paginate(3);
         } else {
-            $posts = Post::with('tags')->orderBy('created_at', 'desc')->paginate(3);
+            $posts = $this->post->with('tags')->orderBy('created_at', 'desc')->paginate(3);
         }
 
         return view('posts.index', compact('posts', 'tagName'));
@@ -44,7 +55,7 @@ class PostsController extends Controller
      */
     public function create()
     {
-        $tags = Tag::all();
+        $tags = $this->tag->all();
         
         return view('posts.create', compact('tags'));
     }
@@ -64,17 +75,20 @@ class PostsController extends Controller
             'post_image' => 'image|nullable|max:1999',
         ]);
 
-        // Handle image uploading
-        $filenameToStore = ($request->hasFile('post_image')) ? $this->saveImage($request->file('post_image')) : 'no_image.jpg';
+        if ($request->hasFile('post_image')) {
+            $filenameToStore = $this->imageUploader->upload($request['post_image']);
+        } else {
+            $filenameToStore = 'no_image.jpg';
+        }
 
-        $post = new Post;
-        $post->title = $request['title'];
-        $post->body = Purifier::clean($request['body']);
-        $post->post_image = $filenameToStore;
-        $post->user_id = auth()->user()->id;
-        $post->save();
+        $post = $this->post->create([
+            'title' => $request['title'],
+            'body' => Purifier::clean($request['body']),
+            'post_image' => $filenameToStore,
+            'user_id' => auth()->user()->id
+        ]);
 
-        $this->attachAllTags($post, $request['tags']);
+        $post->attachTags($request['tags']);
 
         return redirect('/posts')->with('success', 'Post Created');
     }
@@ -87,9 +101,10 @@ class PostsController extends Controller
      */
     public function show($id)
     {
-        if($post = Post::find($id)){
+        if($post = $this->post->find($id)){
             $post->incrementViews();
             $comments = $post->comments->sortByDesc('created_at');
+
             return view('posts.show', compact('post', 'comments'));
         } else {
             return redirect('/posts')->with('error', 'Post not found.');
@@ -104,13 +119,16 @@ class PostsController extends Controller
      */
     public function edit($id)
     {
-        if($post = Post::find($id)){
+        if($post = $this->post->find($id)){
             // Checking for correct user
             if($post->user_id !== auth()->user()->id && !auth()->user()->isAdmin){
                 return redirect('/posts')->with('error', 'Unauthorized page!');
             }
+
             $postTags = $post->tags->pluck('name');
-            $freeTags = Tag::all()->whereNotIn('name', $postTags);
+
+            $freeTags = $this->tag->all()->whereNotIn('name', $postTags);
+
             return view('posts.edit', compact('post', 'freeTags'));
         } else {
             return redirect('/posts')->with('error', 'Post not found.');
@@ -133,20 +151,21 @@ class PostsController extends Controller
             'post_image' => 'image|nullable|max:1999'
         ]);
         
-        if($post = Post::find($id)){
+        if($post = $this->post->find($id)){
             $post->title = $request['title'];
             $post->body = Purifier::clean($request['body']);
+
             if($request->hasFile('post_image')){
-                // Deleting previous image
-                if($post->post_image !== 'no_image.jpg') {
-                    Storage::delete('public/post_images/'.$post->post_image);
-                }
-                $filenameToStore = $this->saveImage($request['post_image']);
+                $post->deleteImage();
+
+                $filenameToStore = $this->imageUploader->upload($request['post_image']);
+
                 $post->post_image = $filenameToStore;
             }
-            $post->tags()->detach();
-            $this->attachAllTags($post, $request['tags']);
+            
+            $post->updateTags($request['tags']);
             $post->save();
+
             return redirect('/posts')->with('success', 'Post Updated');
         } else {
             return redirect('/posts')->with('error', 'Post not found.');
@@ -161,46 +180,17 @@ class PostsController extends Controller
      */
     public function destroy($id)
     {
-        if($post = Post::find($id)){
+        if($post = $this->post->find($id)){
             // Checking for correct user
             if($post->user_id !== auth()->user()->id && !auth()->user()->isAdmin){
                 return redirect('/posts')->with('error', 'Unauthorized page!');
             }
-            if($post->post_image !== 'no_image.jpg'){
-                Storage::delete('public/post_images/'.$post->post_image);
-            }
-            $post->delete();
+
+            $post->deleteWithImage();
+
             return redirect('/posts')->with('success', 'Post Deleted');
         } else {
             return redirect('/posts')->with('error', 'Post not found.');
-        }
-    }
-
-    private function saveImage($image){
-        $filenameWithExt = $image->getClientOriginalName();
-        $fileExt = $image->getClientOriginalExtension();
-        $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
-        if(
-            $fileExt !== 'jpg' && 
-            $fileExt !== 'jpeg' && 
-            $fileExt !== 'gif' && 
-            $fileExt !== 'bmp' && 
-            $fileExt !== 'png' && 
-            $fileExt !== 'svg'
-        ){
-            return redirect('/posts/create')->with('error', 'Invalid file extension');
-        }
-        $filenameToStore = $filename . '_' . time() . '.' . $fileExt;
-        if($image->storeAs('public/post_images', $filenameToStore)){
-            return $filenameToStore;
-        }
-    }
-
-    private function attachAllTags(Post $post, $tags)
-    {
-        $existingTags = Tag::all()->whereIn('name', $tags);
-        foreach($tags as $tag){
-            $post->attachOrCreateAndAttachtTag($existingTags, $tag);
         }
     }
 }

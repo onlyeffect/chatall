@@ -4,15 +4,20 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\User;
-use App\Post;
-use App\Tag;
 
 class UsersController extends Controller
 {
+    private $user;
+
+    public function __construct(User $user)
+    {
+        $this->user = $user;
+    }
+
     public function index()
     {
-        $users = User::withCount('posts')->orderBy('posts_count', 'desc')->get();
+        $activeUsers = $this->user->getActiveUsers();
 
-        return view('users')->with('users', $users);
+        return view('users', compact('activeUsers'));
     }
 }
