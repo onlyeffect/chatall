@@ -42,6 +42,16 @@ class User extends Authenticatable
         return $this->hasMany(Comment::class);
     }
 
+    public function canDelete(Post $post)
+    {
+        return $post->user_id === $this->id || $this->isAdmin;
+    }
+
+    public function canEdit(Post $post)
+    {
+        return $post->user_id === $this->id || $this->isAdmin;
+    }
+
     public function getTags()
     {
         $userTags = Tag::whereHas('posts.user', function ($query) {

@@ -120,16 +120,15 @@ class PostsController extends Controller
     public function edit($id)
     {
         if($post = $this->post->find($id)){
-            // Checking for correct user
-            if($post->user_id !== auth()->user()->id && !auth()->user()->isAdmin){
+            if(auth()->user()->canEdit($post)){
+                $postTags = $post->tags->pluck('name');
+                
+                $freeTags = $this->tag->all()->whereNotIn('name', $postTags);
+                
+                return view('posts.edit', compact('post', 'freeTags'));
+            } else {
                 return redirect('/posts')->with('error', 'Unauthorized page!');
             }
-
-            $postTags = $post->tags->pluck('name');
-
-            $freeTags = $this->tag->all()->whereNotIn('name', $postTags);
-
-            return view('posts.edit', compact('post', 'freeTags'));
         } else {
             return redirect('/posts')->with('error', 'Post not found.');
         }
@@ -152,16 +151,15 @@ class PostsController extends Controller
         ]);
         
         if($post = $this->post->find($id)){
-            $post->title = $request['title'];
-            $post->body = Purifier::clean($request['body']);
-
             if($request->hasFile('post_image')){
                 $post->deleteImage();
-
+                
                 $filenameToStore = $this->imageUploader->upload($request['post_image']);
-
+                
                 $post->post_image = $filenameToStore;
             }
+            $post->title = $request['title'];
+            $post->body = Purifier::clean($request['body']);
             
             $post->updateTags($request['tags']);
             $post->save();
@@ -181,14 +179,13 @@ class PostsController extends Controller
     public function destroy($id)
     {
         if($post = $this->post->find($id)){
-            // Checking for correct user
-            if($post->user_id !== auth()->user()->id && !auth()->user()->isAdmin){
+            if(auth()->user()->canDelete($post)){
+                $post->deleteWithImage();
+
+                return redirect('/posts')->with('success', 'Post Deleted');
+            } else {
                 return redirect('/posts')->with('error', 'Unauthorized page!');
             }
-
-            $post->deleteWithImage();
-
-            return redirect('/posts')->with('success', 'Post Deleted');
         } else {
             return redirect('/posts')->with('error', 'Post not found.');
         }
